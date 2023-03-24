@@ -78,12 +78,14 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
     @Override
     public ChannelFuture register(Channel channel) {
+        //TODO 为什么要用DefaultChannelPromise，这里用到了异步操作吗？
         return register(new DefaultChannelPromise(channel, this));
     }
 
     @Override
     public ChannelFuture register(final ChannelPromise promise) {
         ObjectUtil.checkNotNull(promise, "promise");
+        // promise 关联了 channel，channel 持有 Unsafe 实例，register 操作就封装在 Unsafe 中
         promise.channel().unsafe().register(this, promise);
         return promise;
     }

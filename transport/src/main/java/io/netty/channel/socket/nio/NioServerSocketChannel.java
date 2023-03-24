@@ -72,6 +72,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance
      */
     public NioServerSocketChannel() {
+        // SelectorProvider 实例用于创建 JDK 的 SocketChannel 实例
         this(DEFAULT_SELECTOR_PROVIDER);
     }
 
@@ -86,14 +87,20 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link SelectorProvider} and protocol family (supported only since JDK 15).
      */
     public NioServerSocketChannel(SelectorProvider provider, InternetProtocolFamily family) {
+        // newChannel(provider, family) 方法会创建 JDK 的 ServerSocketChannel
         this(newChannel(provider, family));
     }
 
     /**
      * Create a new instance using the given {@link ServerSocketChannel}.
+     * @param channel 此时的channel类型为java.nio.ServerSocketChannel。
+     *                不是netty的类
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
+        // 服务端的ServerSocketChannel，关心accept链接请求事件
         super(null, channel, SelectionKey.OP_ACCEPT);
+        // 实例化了内部的 NioServerSocketChannelConfig 实例，它用于保存 channel 的配置信息
+        // javaChannel().socket() 等价于 serverSocketChannel.socket() 结果为 serverSocket
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
 

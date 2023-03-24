@@ -50,7 +50,13 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(AbstractNioChannel.class);
 
+    /**
+     * 存放Java的channel
+     */
     private final SelectableChannel ch;
+    /**
+     * 标注此channel关心的io事件
+     */
     protected final int readInterestOp;
     volatile SelectionKey selectionKey;
     boolean readPending;
@@ -81,6 +87,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
+            // 设置channel为非阻塞模式
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {

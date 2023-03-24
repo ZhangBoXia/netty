@@ -94,6 +94,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         succeededFuture = new SucceededChannelFuture(channel, null);
         voidPromise =  new VoidChannelPromise(channel, true);
 
+        // 实例化两个handler节点
         tail = new TailContext(this);
         head = new HeadContext(this);
 
@@ -206,7 +207,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             addLast0(newCtx);
 
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
+            // 如果registered为false，那么意味着channel还没有注册到eventLoop
             // In this case we add the context to the pipeline and add a task that will call
+            // 这种情况下，我们添加这个context到pipeline，再添加一个任务以便将来回调
             // ChannelHandler.handlerAdded(...) once the channel is registered.
             if (!registered) {
                 newCtx.setAddPending();
@@ -1101,13 +1104,13 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
             // This Channel itself was registered.
             registered = true;
-
+            // 在io.netty.bootstrap.ServerBootstrap.init()方法中调用addLast方法进行了赋值
             pendingHandlerCallbackHead = this.pendingHandlerCallbackHead;
             // Null out so it can be GC'ed.
             this.pendingHandlerCallbackHead = null;
         }
 
-        // This must happen outside of the synchronized(...) block as otherwise handlerAdded(...) may be called while
+        // This must happen outside the synchronized(...) block as otherwise handlerAdded(...) may be called while
         // holding the lock and so produce a deadlock if handlerAdded(...) will try to add another handler from outside
         // the EventLoop.
         PendingHandlerCallback task = pendingHandlerCallbackHead;
@@ -1379,7 +1382,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void channelRegistered(ChannelHandlerContext ctx) {
+            // 1. 这一步是 head 对于 channelRegistered 事件的处理。没有我们要关心的
             invokeHandlerAddedIfNeeded();
+            // 2. 向后传播 Inbound 事件
             ctx.fireChannelRegistered();
         }
 

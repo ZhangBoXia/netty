@@ -244,6 +244,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             throw new InterruptedException(toString());
         }
 
+        // 校验是否死锁
         checkDeadLock();
 
         synchronized (this) {

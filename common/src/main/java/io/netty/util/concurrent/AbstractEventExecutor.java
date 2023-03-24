@@ -61,6 +61,7 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
         return this;
     }
 
+    // 判断添加任务的线程是否就是当前 EventLoop 中的线程
     @Override
     public boolean inEventLoop() {
         return inEventLoop(Thread.currentThread());

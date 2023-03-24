@@ -118,6 +118,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private Selector unwrappedSelector;
     private SelectedSelectionKeySet selectedKeys;
 
+    // 通过它来实例化 Selector，可以看到每个线程都持有一个 selectorProvider 实例
     private final SelectorProvider provider;
 
     private static final long AWAKE = -1L;
@@ -129,8 +130,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     //    other value T    when EL is waiting with wakeup scheduled at time T
     private final AtomicLong nextWakeupNanos = new AtomicLong(AWAKE);
 
+    // 涉及到的是线程池中线程的工作流程
     private final SelectStrategy selectStrategy;
 
+    // IO 任务的执行时间比例
     private volatile int ioRatio = 50;
     private int cancelledKeys;
     private boolean needsToSelectAgain;
@@ -142,6 +145,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 rejectedExecutionHandler);
         this.provider = ObjectUtil.checkNotNull(selectorProvider, "selectorProvider");
         this.selectStrategy = ObjectUtil.checkNotNull(strategy, "selectStrategy");
+        // 开启 NIO 中最重要的组件：Selector
         final SelectorTuple selectorTuple = openSelector();
         this.selector = selectorTuple.selector;
         this.unwrappedSelector = selectorTuple.unwrappedSelector;
@@ -441,6 +445,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             try {
                 int strategy;
                 try {
+                    // selectStrategy 终于要派上用场了
+                    // 它有两个值，一个是 CONTINUE 一个是 SELECT
+                    // 针对这块代码，我们分析一下，如果 taskQueue 不为空，也就是 hasTasks() 返回 true，
+                    //         那么执行一次 selectNow()，因为该方法不会阻塞
+                    // 如果 hasTasks() 返回 false，那么执行 SelectStrategy.SELECT 分支，进行 select(...)，这块是带阻塞的
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
                     case SelectStrategy.CONTINUE:
@@ -481,16 +490,20 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 needsToSelectAgain = false;
                 final int ioRatio = this.ioRatio;
                 boolean ranTasks;
+                // 如果 ioRatio 设置为 100，那么先执行 IO 操作，然后在 finally 块中执行 taskQueue 中的任务
                 if (ioRatio == 100) {
                     try {
                         if (strategy > 0) {
+                            // 1. 执行 IO 操作。因为前面 select 以后，可能有些 channel 是需要处理的。
                             processSelectedKeys();
                         }
                     } finally {
                         // Ensure we always run tasks.
+                        // 2. 执行非 IO 任务，也就是 taskQueue 中的任务
                         ranTasks = runAllTasks();
                     }
                 } else if (strategy > 0) {
+                    // 如果 ioRatio 不是 100，那么根据 IO 操作耗时，限制非 IO 操作耗时
                     final long ioStartTime = System.nanoTime();
                     try {
                         processSelectedKeys();
