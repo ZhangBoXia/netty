@@ -488,7 +488,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 try {
                     // 否则，提交任务给 eventLoop，eventLoop 中的线程会负责调用 register0(promise)
                     // 总共两部分：
-                    //      1、eventLoop的execute()方法逻辑。将register0()任务加入任务队列，并开启线程
+                    //      1、eventLoop的execute()方法逻辑。将register0()任务加入eventLoop任务队列，并开启eventLoop的线程
                     //      2、register0()逻辑
                     eventLoop.execute(new Runnable() {
                         @Override
@@ -520,7 +520,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 }
                 boolean firstRegistration = neverRegistered;
                 // 进行 JDK 底层的操作：Java的Channel 注册到 Selector 上
-                // 源码显示，此时注册的channel不监听任何事件，TODO：具体什么时候设置监听事件另说
+                // 源码显示，此时注册的channel仅监听读事件
                 doRegister();
                 neverRegistered = false;
                 registered = true;
@@ -541,7 +541,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // multiple channel actives if the channel is deregistered and re-registered.
                 // 这里 active 指的是 channel 已经打开
                 if (isActive()) {
-                    // 如果该 channel 是第一次执行 register，那么 fire ChannelActive 事件
+                    // 如果该 channel 是第一次执行 register，那么 抛 ChannelActive 事件
                     if (firstRegistration) {
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {

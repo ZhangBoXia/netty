@@ -438,7 +438,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
-    @Override
+    @Override // 此方法中要处理两类任务：IO任务；非IO任务。其中非IO任务存放在taskQueue中。IO任务通过select或selectNow来获取
     protected void run() {
         int selectCnt = 0;
         for (;;) {
@@ -448,7 +448,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     // selectStrategy 终于要派上用场了
                     // 它有两个值，一个是 CONTINUE 一个是 SELECT
                     // 针对这块代码，我们分析一下，如果 taskQueue 不为空，也就是 hasTasks() 返回 true，
-                    //         那么执行一次 selectNow()，因为该方法不会阻塞
+                    //         那么执行一次 selectNow()，因为该方法不会阻塞。执行方式就是selectNowSupplier.get()方法底层是selectNow
                     // 如果 hasTasks() 返回 false，那么执行 SelectStrategy.SELECT 分支，进行 select(...)，这块是带阻塞的
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
@@ -464,7 +464,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                             curDeadlineNanos = NONE; // nothing on the calendar
                         }
                         nextWakeupNanos.set(curDeadlineNanos);
-                        try {
+                        try { // 如果队列里没有task，则执行select。
                             if (!hasTasks()) {
                                 strategy = select(curDeadlineNanos);
                             }
@@ -688,7 +688,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
-        if (!k.isValid()) {
+        if (!k.isValid()) { // key无效的处理
             final EventLoop eventLoop;
             try {
                 eventLoop = ch.eventLoop();
@@ -713,6 +713,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             int readyOps = k.readyOps();
             // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
             // the NIO JDK channel implementation may throw a NotYetConnectedException.
+            // 在读和写之前要确保完成链接，否则 NIO JDK 通道实现可能会抛出 NotYetConnectedException
             if ((readyOps & SelectionKey.OP_CONNECT) != 0) {
                 // remove OP_CONNECT as otherwise Selector.select(..) will always return without blocking
                 // See https://github.com/netty/netty/issues/924
@@ -724,6 +725,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
 
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
+            // 首先处理 OP_WRITE，因为我们可以写入一些排队的缓冲区，从而释放内存。
             if ((readyOps & SelectionKey.OP_WRITE) != 0) {
                 // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write
                 ch.unsafe().forceFlush();

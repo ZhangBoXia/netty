@@ -832,6 +832,13 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         execute(ObjectUtil.checkNotNull(task, "task"), false);
     }
 
+    /**
+     * 1、判断当前线程是不是EventLoop对应的线程
+     * 2、将当前task加入到当前EventLoop的任务队列
+     * 3、第一步中如果返回false
+     *      a、创建新的线程，并将赋值给当前EventLoop的thread
+     *      b、启动线程，run方法逻辑在里面。最终会调用this.run方法，这个扩展方法。
+     */
     private void execute(Runnable task, boolean immediate) {
         boolean inEventLoop = inEventLoop();
         addTask(task);

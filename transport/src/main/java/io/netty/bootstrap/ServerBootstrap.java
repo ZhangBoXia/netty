@@ -140,7 +140,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         final Entry<ChannelOption<?>, Object>[] currentChildOptions = newOptionsArray(childOptions);
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = newAttributesArray(childAttrs);
 
-        // 往pipeline中加入handler
+        // 往pipeline中加入handler；此handle执行时，会往bossGroup中加入一个任务；
         // pipeline中 hean-> ChannelInitializer -> tail
         p.addLast(new ChannelInitializer<Channel>() {
             @Override

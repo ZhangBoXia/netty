@@ -312,7 +312,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
-            // 通过反射实例化channel，执行指定channel类的构造方法
+            // 通过反射实例化channel，执行指定channel类的构造方法。
             channel = channelFactory.newChannel();
             init(channel);
         } catch (Throwable t) {

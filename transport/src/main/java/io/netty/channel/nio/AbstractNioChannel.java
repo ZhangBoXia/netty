@@ -53,12 +53,12 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     /**
      * 存放Java的channel
      */
-    private final SelectableChannel ch;
+    private final SelectableChannel ch; // 服务端channel具体实现ServerSocketChannelImpl
     /**
      * 标注此channel关心的io事件
      */
     protected final int readInterestOp;
-    volatile SelectionKey selectionKey;
+    volatile SelectionKey selectionKey; // 具体实现为SelectionKeyImpl
     boolean readPending;
     private final Runnable clearReadPendingRunnable = new Runnable() {
         @Override
