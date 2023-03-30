@@ -142,7 +142,11 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
         // 往pipeline中加入handler；此handle执行时，会往bossGroup中加入一个任务；
         // pipeline中 hean-> ChannelInitializer -> tail
+        // 如果还未调用register0方法，那么除了生成ctx并尾插到pip外，还对pendingHandlerCallbackHead进行了赋值或者尾插
+        // 这个属性，将会在register0的 pipeline.invokeHandlerAddedIfNeeded()阶段被依次调用。
         p.addLast(new ChannelInitializer<Channel>() {
+            // 此方法在执行时会往channel对应EventLoop的队列中添加任务
+            // 任务内容就是往pip中添加ServerBootstrapAcceptor
             @Override
             public void initChannel(final Channel ch) {
                 final ChannelPipeline pipeline = ch.pipeline();

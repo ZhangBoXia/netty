@@ -76,6 +76,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
+                        // 获取SocketChannel，并生成NioSocketChannel，add到readBuf
                         int localRead = doReadMessages(readBuf);
                         if (localRead == 0) {
                             break;
@@ -84,7 +85,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                             closed = true;
                             break;
                         }
-
+                        // 不重要的步骤
                         allocHandle.incMessagesRead(localRead);
                     } while (continueReading(allocHandle));
                 } catch (Throwable t) {

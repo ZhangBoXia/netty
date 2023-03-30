@@ -212,6 +212,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             // 这种情况下，我们添加这个context到pipeline，再添加一个任务以便将来回调
             // ChannelHandler.handlerAdded(...) once the channel is registered.
             if (!registered) {
+                // 将ctx状态设置为 添加待处理
                 newCtx.setAddPending();
                 callHandlerCallbackLater(newCtx, true);
                 return this;
